@@ -551,20 +551,6 @@
   position: relative;
   min-width: 0;
   overflow-y: auto;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-.canvas-glow {
-  position: fixed;
-  top: var(--topbar-h);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 720px;
-  height: 420px;
-  pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(205, 244, 99, 0.055), transparent 65%);
-  z-index: 0;
 }
 
 /* double-bezel tray around the paper */
@@ -1529,8 +1515,6 @@
   flex: 1;
   overflow-y: auto;
   background: #101012;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 24px 24px;
 }
 
 .preview-page {

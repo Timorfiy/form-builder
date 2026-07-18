@@ -287,7 +287,6 @@ export function Canvas() {
 
   return (
     <main className="canvas" onClick={() => dispatch({ type: 'select', id: null })}>
-      <div className="canvas-glow" aria-hidden="true" />
       <div
         className="paper-tray"
         onDragOver={onContainerDragOver}
