@@ -13,42 +13,41 @@ Drag blocks, tune every detail, preview instantly, export clean JSON. No backend
 [![React 19](https://img.shields.io/badge/React-19-087ea4?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vite 8](https://img.shields.io/badge/Vite-8-a855f7?logo=vite&logoColor=white)](https://vite.dev)
-[![Zero backend](https://img.shields.io/badge/backend-none-cdf463)](https://timorfiy.github.io/FormForge/)
 
 </div>
 
 ---
 
-## ✨ Features
+## Features
 
 <table>
 <tr>
 <td width="50%">
 
-🧱 **15 block types** — headings, paragraphs, dividers (3 styles), short/long text, email, phone, URL, number, date, dropdown, single & multiple choice, switch, star rating
+**15 block types** — headings, paragraphs, dividers (3 styles), short/long text, email, phone, URL, number, date, dropdown, single & multiple choice, switch, star rating
 
-🎨 **3 form styles** — Classic, Noir and Soft themes restyle the whole form in one click
+**3 form styles** — Classic, Noir and Soft themes restyle the whole form in one click
 
-🖱️ **Drag & drop** — pull blocks from the palette, reorder with live drop indicators; zero DnD dependencies
+**Drag & drop** — pull blocks from the palette, reorder with live drop indicators; zero DnD dependencies
 
-🔍 **Inspector** — labels, placeholders, help text, required flags, options, min/max, star counts
+**Inspector** — labels, placeholders, help text, required flags, options, min/max, star counts
 
 </td>
 <td width="50%">
 
-📅 **Hand-built controls** — calendar date picker with month/year jump views and keyboard entry, animated dropdown listbox, phone masks for RU / US / UK / DE / FR
+**Hand-built controls** — calendar date picker with month/year jump views and keyboard entry, animated dropdown listbox, phone masks for RU / US / UK / DE / FR
 
-👀 **Live preview** — real validation (required, formats, ranges, masks), animated success screen with the submitted JSON payload
+**Live preview** — real validation (required, formats, ranges, masks), animated success screen with the submitted JSON payload
 
-📦 **Export / import** — portable form JSON with full validation and coercion on load
+**Export / import** — portable form JSON with full validation and coercion on load
 
-↩️ **Comfort** — undo/redo history, keyboard shortcuts, templates, autosave to `localStorage`
+**Comfort** — undo/redo history, keyboard shortcuts, templates, autosave to `localStorage`
 
 </td>
 </tr>
 </table>
 
-## 🚀 How it works
+## How it works
 
 1. **Pick blocks** from the palette — click or drag them onto the paper.
 2. **Tune everything** in the inspector — or restyle the whole form with one style card.
@@ -56,7 +55,7 @@ Drag blocks, tune every detail, preview instantly, export clean JSON. No backend
 
 Start fast with a template: *Contact form · Event RSVP · Job application · Product feedback*.
 
-## ⌨️ Keyboard shortcuts
+## Keyboard shortcuts
 
 | Shortcut | Action |
 | --- | --- |
@@ -66,14 +65,14 @@ Start fast with a template: *Contact form · Event RSVP · Job application · Pr
 | `Ctrl / ⌘ + D` | Duplicate selected block |
 | `Esc` | Deselect / close dialog |
 
-## 🧰 Tech stack
+## Tech stack
 
 - **React 19 + TypeScript** — strict mode, discriminated-union block model
 - **Vite 8** + oxlint
 - **Plain CSS** — custom design system (Geist / Geist Mono, dark glass shell, spring motion)
 - **No UI libraries** — every control (calendar, listbox, masks, DnD) is hand-rolled
 
-## 📦 Form JSON schema
+## Form JSON schema
 
 ```jsonc
 {
@@ -98,7 +97,7 @@ Start fast with a template: *Contact form · Event RSVP · Job application · Pr
 }
 ```
 
-## 🛠️ Development
+## Development
 
 ```bash
 npm install
@@ -135,7 +134,7 @@ src/
 
 </details>
 
-## 🚢 Deployment
+## Deployment
 
 Pushes to `main` build and deploy to GitHub Pages automatically via
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
