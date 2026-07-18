@@ -1,4 +1,4 @@
-import type { FormDoc } from './types'
+import type { FormDoc, FormStyle } from './types'
 import { uid } from './types'
 
 export interface Template {
@@ -12,7 +12,7 @@ function base(partial: Partial<FormDoc> & { title: string }): FormDoc {
   return {
     description: '',
     submitLabel: 'Submit',
-    accent: '#17171C',
+    style: 'classic' as FormStyle,
     blocks: [],
     ...partial,
   }
@@ -39,7 +39,7 @@ export const TEMPLATES: Template[] = [
         title: 'Get in touch',
         description: 'We usually reply within one business day.',
         submitLabel: 'Send message',
-        accent: '#17171C',
+        style: 'classic',
         blocks: [
           { id: uid(), kind: 'shortText', label: 'Full name', placeholder: 'Ada Lovelace', helpText: '', required: true },
           { id: uid(), kind: 'email', label: 'Email address', placeholder: 'you@example.com', helpText: '', required: true },
@@ -57,7 +57,7 @@ export const TEMPLATES: Template[] = [
         title: 'Summer rooftop party',
         description: 'Saturday, August 15 · 7 PM · 21 Mercer St. Let us know if you’re coming.',
         submitLabel: 'Send RSVP',
-        accent: '#6C5CE7',
+        style: 'soft',
         blocks: [
           { id: uid(), kind: 'shortText', label: 'Your name', placeholder: 'Grace Hopper', helpText: '', required: true },
           { id: uid(), kind: 'email', label: 'Email address', placeholder: 'you@example.com', helpText: '', required: true },
@@ -77,13 +77,13 @@ export const TEMPLATES: Template[] = [
         title: 'Senior Frontend Engineer',
         description: 'Remote · Full-time. We review every application within a week.',
         submitLabel: 'Apply now',
-        accent: '#1F7A5C',
+        style: 'noir',
         blocks: [
           { id: uid(), kind: 'heading', text: 'About you' },
           { id: uid(), kind: 'shortText', label: 'Full name', placeholder: 'Alan Turing', helpText: '', required: true },
           { id: uid(), kind: 'email', label: 'Email address', placeholder: 'you@example.com', helpText: '', required: true },
           { id: uid(), kind: 'url', label: 'Portfolio or LinkedIn', placeholder: 'https://…', helpText: '', required: false },
-          { id: uid(), kind: 'divider' },
+          { id: uid(), kind: 'divider', variant: 'dots' },
           { id: uid(), kind: 'heading', text: 'Experience' },
           { id: uid(), kind: 'dropdown', label: 'Years of experience', helpText: '', required: true, options: ['0–2', '3–5', '6–9', '10+'] },
           { id: uid(), kind: 'checkboxes', label: 'Technologies you know well', helpText: '', required: false, options: ['React', 'TypeScript', 'Node.js', 'GraphQL', 'Design systems'] },
@@ -101,7 +101,7 @@ export const TEMPLATES: Template[] = [
         title: 'How are we doing?',
         description: 'Two minutes of your time makes the product better for everyone.',
         submitLabel: 'Send feedback',
-        accent: '#E1552F',
+        style: 'classic',
         blocks: [
           { id: uid(), kind: 'rating', label: 'Overall experience', helpText: '', required: true, max: 5 },
           { id: uid(), kind: 'radio', label: 'How likely are you to recommend us?', helpText: '', required: true, options: ['Very likely', 'Likely', 'Not sure', 'Unlikely'] },

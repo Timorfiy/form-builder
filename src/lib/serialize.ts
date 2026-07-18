@@ -1,8 +1,11 @@
-import type { Block, BlockKind, FormDoc } from '../types'
+import type { Block, BlockKind, DividerVariant, FormDoc, FormStyle, PhoneMaskId } from '../types'
 import { uid } from '../types'
 import { createBlock, BLOCK_REGISTRY } from '../blocks/registry'
 
 const VALID_KINDS = new Set<BlockKind>(BLOCK_REGISTRY.map((m) => m.kind))
+const VALID_STYLES = new Set<FormStyle>(['classic', 'noir', 'soft'])
+const VALID_DIVIDERS = new Set<DividerVariant>(['line', 'dashed', 'dots'])
+const VALID_MASKS = new Set<PhoneMaskId>(['none', 'ru', 'us', 'uk', 'de', 'fr'])
 
 export function serializeDoc(doc: FormDoc): string {
   return JSON.stringify({ $formforge: 1, ...doc }, null, 2)
@@ -51,11 +54,27 @@ export function parseDoc(raw: unknown): FormDoc {
         blocks.push({ ...base, id, text: str(b.text, base.text) })
         break
       case 'divider':
-        blocks.push({ ...base, id })
+        blocks.push({
+          ...base,
+          id,
+          variant: VALID_DIVIDERS.has(b.variant as DividerVariant)
+            ? (b.variant as DividerVariant)
+            : 'line',
+        })
+        break
+      case 'phone':
+        blocks.push({
+          ...base,
+          id,
+          label: str(b.label, base.label),
+          placeholder: str(b.placeholder, base.placeholder),
+          helpText: str(b.helpText, base.helpText),
+          required: bool(b.required, base.required),
+          mask: VALID_MASKS.has(b.mask as PhoneMaskId) ? (b.mask as PhoneMaskId) : 'none',
+        })
         break
       case 'shortText':
       case 'email':
-      case 'phone':
       case 'url':
       case 'date':
       case 'longText':
@@ -121,7 +140,7 @@ export function parseDoc(raw: unknown): FormDoc {
     title: str(obj.title, 'Untitled form'),
     description: str(obj.description, ''),
     submitLabel: str(obj.submitLabel, 'Submit'),
-    accent: str(obj.accent, '#17171C'),
+    style: VALID_STYLES.has(obj.style as FormStyle) ? (obj.style as FormStyle) : 'classic',
     blocks,
   }
 }

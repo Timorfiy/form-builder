@@ -44,7 +44,7 @@ export function createBlock(kind: BlockKind): Block {
     case 'paragraph':
       return { id, kind, text: 'Add a short explanation for the people filling out this form.' }
     case 'divider':
-      return { id, kind }
+      return { id, kind, variant: 'line' }
     case 'shortText':
       return { id, kind, label: 'Your answer', placeholder: 'Type here…', helpText: '', required: false }
     case 'longText':
@@ -52,7 +52,7 @@ export function createBlock(kind: BlockKind): Block {
     case 'email':
       return { id, kind, label: 'Email address', placeholder: 'you@example.com', helpText: '', required: true }
     case 'phone':
-      return { id, kind, label: 'Phone number', placeholder: '+1 555 000 0000', helpText: '', required: false }
+      return { id, kind, label: 'Phone number', placeholder: '+1 555 000 0000', helpText: '', required: false, mask: 'none' }
     case 'url':
       return { id, kind, label: 'Website', placeholder: 'https://…', helpText: '', required: false }
     case 'number':

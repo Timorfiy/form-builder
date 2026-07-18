@@ -94,8 +94,8 @@ select {
 }
 
 ::selection {
-  background: rgba(205, 244, 99, 0.28);
-  color: #fff;
+  background: #17171c;
+  color: var(--lime);
 }
 
 /* ---- scrollbars ---- */
@@ -125,6 +125,14 @@ select {
   border: 2px solid transparent;
 }
 
+.rot-90 {
+  transform: rotate(90deg);
+}
+
 .rot-180 {
   transform: rotate(180deg);
+}
+
+.rot-270 {
+  transform: rotate(270deg);
 }

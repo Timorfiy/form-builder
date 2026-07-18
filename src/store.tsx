@@ -47,22 +47,34 @@ export type Action =
   | { type: 'redo' }
 
 function loadInitial(): FormDoc {
+  const fallback: FormDoc = {
+    title: 'Untitled form',
+    description: '',
+    submitLabel: 'Submit',
+    style: 'classic',
+    blocks: [],
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw) as FormDoc
-      if (parsed && Array.isArray(parsed.blocks)) return parsed
+      const parsed = JSON.parse(raw) as Partial<FormDoc>
+      if (parsed && Array.isArray(parsed.blocks)) {
+        return {
+          title: typeof parsed.title === 'string' ? parsed.title : fallback.title,
+          description:
+            typeof parsed.description === 'string' ? parsed.description : fallback.description,
+          submitLabel:
+            typeof parsed.submitLabel === 'string' ? parsed.submitLabel : fallback.submitLabel,
+          style:
+            parsed.style === 'noir' || parsed.style === 'soft' ? parsed.style : 'classic',
+          blocks: parsed.blocks,
+        }
+      }
     }
   } catch {
     /* corrupted storage — fall through to default */
   }
-  return {
-    title: 'Untitled form',
-    description: '',
-    submitLabel: 'Submit',
-    accent: '#17171C',
-    blocks: [],
-  }
+  return fallback
 }
 
 const initialState: BuilderState = {

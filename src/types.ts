@@ -15,6 +15,13 @@ export type BlockKind =
   | 'switch'
   | 'rating'
 
+/** Overall visual style of the rendered form */
+export type FormStyle = 'classic' | 'noir' | 'soft'
+
+export type DividerVariant = 'line' | 'dashed' | 'dots'
+
+export type PhoneMaskId = 'none' | 'ru' | 'us' | 'uk' | 'de' | 'fr'
+
 interface BlockBase {
   id: string
   kind: BlockKind
@@ -32,14 +39,24 @@ export interface ParagraphBlock extends BlockBase {
 
 export interface DividerBlock extends BlockBase {
   kind: 'divider'
+  variant: DividerVariant
 }
 
 export interface InputBlock extends BlockBase {
-  kind: 'shortText' | 'email' | 'phone' | 'url' | 'date'
+  kind: 'shortText' | 'email' | 'url' | 'date'
   label: string
   placeholder: string
   helpText: string
   required: boolean
+}
+
+export interface PhoneBlock extends BlockBase {
+  kind: 'phone'
+  label: string
+  placeholder: string
+  helpText: string
+  required: boolean
+  mask: PhoneMaskId
 }
 
 export interface LongTextBlock extends BlockBase {
@@ -89,6 +106,7 @@ export type Block =
   | ParagraphBlock
   | DividerBlock
   | InputBlock
+  | PhoneBlock
   | LongTextBlock
   | NumberBlock
   | OptionsBlock
@@ -99,17 +117,15 @@ export interface FormDoc {
   title: string
   description: string
   submitLabel: string
-  accent: string
+  style: FormStyle
   blocks: Block[]
 }
 
-export const ACCENT_PRESETS = [
-  { name: 'Ink', value: '#17171C' },
-  { name: 'Violet', value: '#6C5CE7' },
-  { name: 'Ember', value: '#E1552F' },
-  { name: 'Forest', value: '#1F7A5C' },
-  { name: 'Ocean', value: '#2E6BE6' },
-] as const
+export const FORM_STYLES: { id: FormStyle; name: string; tagline: string }[] = [
+  { id: 'classic', name: 'Classic', tagline: 'Clean white sheet, ink accents' },
+  { id: 'noir', name: 'Noir', tagline: 'Dark card, glowing lime accents' },
+  { id: 'soft', name: 'Soft', tagline: 'Warm paper, rounded, violet accents' },
+]
 
 export function uid(): string {
   return (

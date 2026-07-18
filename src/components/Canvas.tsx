@@ -2,6 +2,7 @@ import { useState, type DragEvent } from 'react'
 import { useBuilder } from '../store'
 import type { Block, BlockKind } from '../types'
 import { getMeta } from '../blocks/registry'
+import { getMask, maskPlaceholder } from '../lib/masks'
 import { TEMPLATES } from '../templates'
 import { DND_MIME } from './Palette'
 import { Icon } from './Icon'
@@ -29,7 +30,30 @@ function BlockMock({ block }: { block: Block }) {
     case 'paragraph':
       return <p className="mock-paragraph">{block.text}</p>
     case 'divider':
+      if (block.variant === 'dashed') return <hr className="mock-divider is-dashed" />
+      if (block.variant === 'dots')
+        return (
+          <div className="mock-dots" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        )
       return <hr className="mock-divider" />
+    case 'phone': {
+      const def = getMask(block.mask)
+      return (
+        <div className="mock-field">
+          <FieldLabel label={block.label} required={block.required} />
+          <div className="mock-input">
+            <span className="mock-placeholder">
+              {def ? maskPlaceholder(def) : block.placeholder || 'Type here…'}
+            </span>
+          </div>
+          <HelpText text={block.helpText} />
+        </div>
+      )
+    }
     case 'rating':
       return (
         <div className="mock-field">
@@ -270,8 +294,7 @@ export function Canvas() {
         onDragLeave={onContainerDragLeave}
         onDrop={onDrop}
       >
-        <div className="paper">
-          <div className="paper-accent" style={{ background: doc.accent }} />
+        <div className={`paper form-style-${doc.style}`}>
           <header className="paper-head">
             <h1 className="paper-title">{doc.title || 'Untitled form'}</h1>
             {doc.description && <p className="paper-desc">{doc.description}</p>}
@@ -326,7 +349,7 @@ export function Canvas() {
 
           {!isEmpty && (
             <div className="paper-submit-row">
-              <span className="paper-submit" style={{ background: doc.accent }}>
+              <span className="paper-submit">
                 {doc.submitLabel || 'Submit'}
                 <span className="paper-submit-orb">
                   <Icon name="send" size={13} strokeWidth={1.8} />
@@ -334,10 +357,6 @@ export function Canvas() {
               </span>
             </div>
           )}
-
-          <footer className="paper-foot">
-            <span className="paper-foot-mark">made with FormForge</span>
-          </footer>
         </div>
       </div>
     </main>

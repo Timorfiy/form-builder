@@ -1,8 +1,12 @@
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useMemo, useState } from 'react'
 import { useBuilder } from '../store'
 import type { Block, FormDoc } from '../types'
 import { isFieldKind } from '../types'
+import { extractNationalDigits, getMask, nationalDigitCount } from '../lib/masks'
 import { Icon } from './Icon'
+import { DatePicker } from './DatePicker'
+import { CustomSelect } from './CustomSelect'
+import { PhoneInput } from './PhoneInput'
 
 type Value = string | number | boolean | string[]
 type Values = Record<string, Value>
@@ -52,8 +56,16 @@ function validate(doc: FormDoc, values: Values): Errors {
     if (typeof v === 'string' && v.trim() !== '') {
       if (b.kind === 'email' && !EMAIL_RE.test(v)) errors[b.id] = 'Enter a valid email address.'
       else if (b.kind === 'url' && !URL_RE.test(v.trim())) errors[b.id] = 'Enter a valid URL.'
-      else if (b.kind === 'phone' && !PHONE_RE.test(v)) errors[b.id] = 'Enter a valid phone number.'
-      else if (b.kind === 'number') {
+      else if (b.kind === 'phone') {
+        const def = getMask(b.mask)
+        if (def) {
+          if (extractNationalDigits(v, def).length !== nationalDigitCount(def)) {
+            errors[b.id] = 'Enter a complete phone number.'
+          }
+        } else if (!PHONE_RE.test(v)) {
+          errors[b.id] = 'Enter a valid phone number.'
+        }
+      } else if (b.kind === 'number') {
         const n = Number(v)
         if (Number.isNaN(n)) errors[b.id] = 'Enter a number.'
         else if (b.min !== null && n < b.min) errors[b.id] = `Must be at least ${b.min}.`
@@ -122,6 +134,15 @@ function PreviewField({ block, value, error, set }: FieldProps) {
     case 'paragraph':
       return <p className="pv-paragraph">{block.text}</p>
     case 'divider':
+      if (block.variant === 'dashed') return <hr className="pv-divider is-dashed" />
+      if (block.variant === 'dots')
+        return (
+          <div className="pv-dots" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        )
       return <hr className="pv-divider" />
 
     case 'longText':
@@ -137,26 +158,29 @@ function PreviewField({ block, value, error, set }: FieldProps) {
         </FieldFrame>
       )
 
+    case 'date':
+      return (
+        <FieldFrame block={block} error={error}>
+          <DatePicker value={value as string} onChange={set} />
+        </FieldFrame>
+      )
+
+    case 'phone':
+      return (
+        <FieldFrame block={block} error={error}>
+          <PhoneInput
+            value={value as string}
+            onChange={set}
+            maskId={block.mask}
+            placeholder={block.placeholder}
+          />
+        </FieldFrame>
+      )
+
     case 'dropdown':
       return (
         <FieldFrame block={block} error={error}>
-          <div className="pv-select-wrap">
-            <select
-              className={`pv-input pv-select ${value === '' ? 'is-empty' : ''}`}
-              value={value as string}
-              onChange={(e) => set(e.target.value)}
-            >
-              <option value="" disabled>
-                Select…
-              </option>
-              {block.options.map((o, i) => (
-                <option key={i} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-            <Icon name="chevronDown" size={15} className="pv-select-icon" />
-          </div>
+          <CustomSelect value={value as string} options={block.options} onChange={set} />
         </FieldFrame>
       )
 
@@ -257,15 +281,11 @@ function PreviewField({ block, value, error, set }: FieldProps) {
       const type =
         block.kind === 'email'
           ? 'email'
-          : block.kind === 'phone'
-            ? 'tel'
-            : block.kind === 'url'
-              ? 'url'
-              : block.kind === 'number'
-                ? 'number'
-                : block.kind === 'date'
-                  ? 'date'
-                  : 'text'
+          : block.kind === 'url'
+            ? 'url'
+            : block.kind === 'number'
+              ? 'number'
+              : 'text'
       return (
         <FieldFrame block={block} error={error}>
           <input
@@ -292,7 +312,6 @@ export function Preview() {
   const [errors, setErrors] = useState<Errors>({})
   const [payload, setPayload] = useState<Record<string, Value> | null>(null)
 
-  const accentStyle = { '--form-accent': doc.accent } as CSSProperties
   const fieldCount = useMemo(
     () => doc.blocks.filter((b) => isFieldKind(b.kind)).length,
     [doc.blocks],
@@ -329,7 +348,7 @@ export function Preview() {
   }
 
   return (
-    <main className="preview" style={accentStyle}>
+    <main className={`preview form-style-${doc.style}`}>
       <div className="preview-page">
         {payload ? (
           <div className="pv-success">
@@ -357,7 +376,6 @@ export function Preview() {
           </div>
         ) : (
           <form className="paper pv-paper" onSubmit={submit} noValidate>
-            <div className="paper-accent" style={{ background: doc.accent }} />
             <header className="paper-head">
               <h1 className="paper-title">{doc.title || 'Untitled form'}</h1>
               {doc.description && <p className="paper-desc">{doc.description}</p>}
@@ -401,10 +419,6 @@ export function Preview() {
                 </div>
               </>
             )}
-
-            <footer className="paper-foot">
-              <span className="paper-foot-mark">made with FormForge</span>
-            </footer>
           </form>
         )}
       </div>

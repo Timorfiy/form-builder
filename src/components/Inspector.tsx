@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { useBuilder } from '../store'
 import type { Block, NumberBlock, OptionsBlock, RatingBlock } from '../types'
-import { ACCENT_PRESETS } from '../types'
+import { FORM_STYLES } from '../types'
+import { PHONE_MASKS } from '../lib/masks'
 import { getMeta } from '../blocks/registry'
 import { Icon } from './Icon'
 
@@ -98,12 +99,12 @@ function BlockSettings({ block }: { block: Block }) {
   const hasLabel =
     block.kind !== 'heading' && block.kind !== 'paragraph' && block.kind !== 'divider'
   const hasPlaceholder =
-    block.kind === 'shortText' ||
-    block.kind === 'longText' ||
-    block.kind === 'email' ||
-    block.kind === 'phone' ||
-    block.kind === 'url' ||
-    block.kind === 'number'
+    (block.kind === 'shortText' ||
+      block.kind === 'longText' ||
+      block.kind === 'email' ||
+      block.kind === 'url' ||
+      block.kind === 'number') ||
+    (block.kind === 'phone' && block.mask === 'none')
   const hasRequired =
     hasLabel && block.kind !== 'switch'
   const hasHelp = block.kind !== 'divider'
@@ -141,6 +142,50 @@ function BlockSettings({ block }: { block: Block }) {
             value={block.text}
             onChange={(e) => patch({ text: e.target.value })}
           />
+        </Field>
+      )}
+
+      {block.kind === 'divider' && (
+        <div className="insp-field">
+          <span className="insp-label">Style</span>
+          <div className="seg-row">
+            {(
+              [
+                { id: 'line', label: 'Line' },
+                { id: 'dashed', label: 'Dashed' },
+                { id: 'dots', label: 'Dots' },
+              ] as const
+            ).map((v) => (
+              <button
+                key={v.id}
+                className={`seg-btn ${block.variant === v.id ? 'is-active' : ''}`}
+                onClick={() => patch({ variant: v.id })}
+              >
+                <span className={`seg-divider-preview is-${v.id}`} aria-hidden="true" />
+                {v.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {block.kind === 'phone' && (
+        <Field label="Country mask">
+          <div className="insp-select-wrap">
+            <select
+              className="insp-input insp-select"
+              value={block.mask}
+              onChange={(e) => patch({ mask: e.target.value as typeof block.mask })}
+            >
+              <option value="none">No mask</option>
+              {PHONE_MASKS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} (+{m.dial})
+                </option>
+              ))}
+            </select>
+            <Icon name="chevronDown" size={14} className="insp-select-icon" />
+          </div>
         </Field>
       )}
 
@@ -291,17 +336,26 @@ function FormSettings() {
       </Field>
 
       <div className="insp-field">
-        <span className="insp-label">Accent color</span>
-        <div className="swatch-row">
-          {ACCENT_PRESETS.map((preset) => (
+        <span className="insp-label">Form style</span>
+        <div className="style-picker">
+          {FORM_STYLES.map((s) => (
             <button
-              key={preset.value}
-              className={`swatch ${doc.accent === preset.value ? 'is-active' : ''}`}
-              style={{ background: preset.value }}
-              title={preset.name}
-              onClick={() => patch({ accent: preset.value })}
+              key={s.id}
+              className={`style-card ${doc.style === s.id ? 'is-active' : ''}`}
+              onClick={() => patch({ style: s.id })}
+              aria-pressed={doc.style === s.id}
             >
-              {doc.accent === preset.value && <Icon name="check" size={12} strokeWidth={2.2} />}
+              <span className={`style-thumb form-style-${s.id}`} aria-hidden="true">
+                <span className="style-thumb-line is-title" />
+                <span className="style-thumb-input" />
+                <span className="style-thumb-input is-short" />
+                <span className="style-thumb-btn" />
+              </span>
+              <span className="style-card-name">
+                {s.name}
+                {doc.style === s.id && <Icon name="check" size={12} strokeWidth={2.4} />}
+              </span>
+              <span className="style-card-tagline">{s.tagline}</span>
             </button>
           ))}
         </div>

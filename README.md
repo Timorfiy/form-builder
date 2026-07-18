@@ -6,10 +6,12 @@ A block-based form builder that runs entirely in the browser. Drag blocks onto t
 
 ## Features
 
-- **15 block types** — heading, paragraph, divider, short/long text, email, phone, URL, number, date, dropdown, single choice, multiple choice, switch, rating
+- **15 block types** — heading, paragraph, divider (3 styles), short/long text, email, phone, URL, number, date, dropdown, single choice, multiple choice, switch, rating
+- **3 form styles** — Classic, Noir and Soft themes restyle the whole form (paper, fields, accents) in one click
 - **Drag & drop** — drag blocks from the palette to the canvas, drag to reorder (HTML5 DnD, no dependencies)
 - **Inspector** — edit labels, placeholders, help text, required flags, options, min/max, star counts
-- **Live preview** — the form as end users see it: working inputs, validation (required, email/URL/phone formats, number ranges), animated success screen with the submitted JSON payload
+- **Custom form controls** — hand-built date picker with month calendar, animated dropdown listbox, and phone inputs with country masks (RU +7, US +1, UK +44, DE +49, FR +33)
+- **Live preview** — the form as end users see it: working inputs, validation (required, email/URL/phone formats, number ranges, mask completeness), animated success screen with the submitted JSON payload
 - **Export / import** — copy or download the form as JSON; import it back with full validation and coercion
 - **Templates** — contact form, event RSVP, job application, product feedback, or blank
 - **Undo / redo** — full history with coalesced keystroke edits (`Ctrl+Z` / `Ctrl+Shift+Z`)
@@ -45,7 +47,7 @@ Pushes to `main` build and deploy to GitHub Pages automatically via `.github/wor
   "title": "Get in touch",
   "description": "We usually reply within one business day.",
   "submitLabel": "Send message",
-  "accent": "#17171C",
+  "style": "classic",           // "classic" | "noir" | "soft"
   "blocks": [
     {
       "id": "a1b2c3",
@@ -55,7 +57,9 @@ Pushes to `main` build and deploy to GitHub Pages automatically via `.github/wor
       "helpText": "",
       "required": true
     }
-    // option blocks add "options": [...], number blocks add "min"/"max", etc.
+    // option blocks add "options": [...], number blocks add "min"/"max",
+    // phone blocks add "mask": "ru"|"us"|"uk"|"de"|"fr"|"none",
+    // dividers add "variant": "line"|"dashed"|"dots"
   ]
 }
 ```

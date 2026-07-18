@@ -76,7 +76,7 @@ export function TopBar() {
 
       <div className="topbar-side is-right">
         <button
-          className="btn-icon"
+          className="btn-icon is-optional"
           title="Undo (Ctrl+Z)"
           disabled={past.length === 0}
           onClick={() => dispatch({ type: 'undo' })}
@@ -84,7 +84,7 @@ export function TopBar() {
           <Icon name="undo" size={16} />
         </button>
         <button
-          className="btn-icon"
+          className="btn-icon is-optional"
           title="Redo (Ctrl+Shift+Z)"
           disabled={future.length === 0}
           onClick={() => dispatch({ type: 'redo' })}
@@ -140,7 +140,7 @@ export function TopBar() {
         </button>
 
         <a
-          className="btn-icon"
+          className="btn-icon is-optional"
           href="https://github.com/Timorfiy/form-builder"
           target="_blank"
           rel="noreferrer"
