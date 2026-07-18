@@ -23,7 +23,7 @@ export function Palette() {
   return (
     <aside className="palette" aria-label="Block palette">
       <div className="panel-head palette-head">
-        <span className="palette-title">Blocks</span>
+        <span className="panel-title-lg">Blocks</span>
         <span className="panel-hint">drag or click</span>
       </div>
 

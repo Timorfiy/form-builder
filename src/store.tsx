@@ -67,7 +67,16 @@ function loadInitial(): FormDoc {
             typeof parsed.submitLabel === 'string' ? parsed.submitLabel : fallback.submitLabel,
           style:
             parsed.style === 'noir' || parsed.style === 'soft' ? parsed.style : 'classic',
-          blocks: parsed.blocks,
+          // backfill fields introduced after the doc was saved
+          blocks: parsed.blocks.map((b) => {
+            if (b.kind === 'phone' && (b as { mask?: unknown }).mask === undefined) {
+              return { ...b, mask: 'none' as const }
+            }
+            if (b.kind === 'divider' && (b as { variant?: unknown }).variant === undefined) {
+              return { ...b, variant: 'line' as const }
+            }
+            return b
+          }),
         }
       }
     }

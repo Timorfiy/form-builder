@@ -305,8 +305,8 @@ function FormSettings() {
 
   return (
     <>
-      <div className="panel-head">
-        <span className="panel-title">Form settings</span>
+      <div className="panel-head palette-head">
+        <span className="panel-title-lg">Form settings</span>
       </div>
 
       <Field label="Title">
@@ -416,8 +416,8 @@ export function Inspector() {
       <div className="inspector-scroll">
         {block ? (
           <>
-            <div className="panel-head">
-              <span className="panel-title">Block settings</span>
+            <div className="panel-head palette-head">
+              <span className="panel-title-lg">Block settings</span>
             </div>
             <BlockSettings block={block} />
           </>
