@@ -2,7 +2,7 @@
 
 A block-based form builder that runs entirely in the browser. Drag blocks onto the page, tune every detail in the inspector, preview the live form with real validation, and export a clean, portable JSON definition.
 
-**Live demo:** https://timorfiy.github.io/form-builder/
+**Live demo:** https://timorfiy.github.io/FormForge/
 
 ## Features
 
@@ -37,7 +37,7 @@ npm run preview  # serve the production build
 
 ## Deployment
 
-Pushes to `main` build and deploy to GitHub Pages automatically via `.github/workflows/deploy.yml`. The site is served under the `/form-builder/` base path (configured in `vite.config.ts`).
+Pushes to `main` build and deploy to GitHub Pages automatically via `.github/workflows/deploy.yml`. The site is served under the `/FormForge/` base path (configured in `vite.config.ts`).
 
 ## Form JSON schema
 

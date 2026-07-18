@@ -141,7 +141,7 @@ export function TopBar() {
 
         <a
           className="btn-icon is-optional"
-          href="https://github.com/Timorfiy/form-builder"
+          href="https://github.com/Timorfiy/FormForge"
           target="_blank"
           rel="noreferrer"
           title="View on GitHub"
