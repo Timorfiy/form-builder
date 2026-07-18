@@ -1,45 +1,79 @@
-# FormForge — Visual Form Builder
+<div align="center">
 
-A block-based form builder that runs entirely in the browser. Drag blocks onto the page, tune every detail in the inspector, preview the live form with real validation, and export a clean, portable JSON definition.
+<img src="public/favicon.svg" width="80" height="80" alt="FormForge logo" />
 
-**Live demo:** https://timorfiy.github.io/FormForge/
+# FormForge
 
-## Features
+**A visual, block-based form builder — right in your browser.**<br/>
+Drag blocks, tune every detail, preview instantly, export clean JSON. No backend, no sign-up.
 
-- **15 block types** — heading, paragraph, divider (3 styles), short/long text, email, phone, URL, number, date, dropdown, single choice, multiple choice, switch, rating
-- **3 form styles** — Classic, Noir and Soft themes restyle the whole form (paper, fields, accents) in one click
-- **Drag & drop** — drag blocks from the palette to the canvas, drag to reorder (HTML5 DnD, no dependencies)
-- **Inspector** — edit labels, placeholders, help text, required flags, options, min/max, star counts
-- **Custom form controls** — hand-built date picker with month calendar, animated dropdown listbox, and phone inputs with country masks (RU +7, US +1, UK +44, DE +49, FR +33)
-- **Live preview** — the form as end users see it: working inputs, validation (required, email/URL/phone formats, number ranges, mask completeness), animated success screen with the submitted JSON payload
-- **Export / import** — copy or download the form as JSON; import it back with full validation and coercion
-- **Templates** — contact form, event RSVP, job application, product feedback, or blank
-- **Undo / redo** — full history with coalesced keystroke edits (`Ctrl+Z` / `Ctrl+Shift+Z`)
-- **Keyboard shortcuts** — `Del` remove block, `Ctrl+D` duplicate, `Esc` deselect
-- **Autosave** — the form persists to `localStorage`
-- **Zero backend** — 100% client-side, deployable to any static host
+<a href="https://timorfiy.github.io/FormForge/"><strong>▸ Open the live app</strong></a>
 
-## Tech stack
+[![Deploy](https://github.com/Timorfiy/FormForge/actions/workflows/deploy.yml/badge.svg)](https://github.com/Timorfiy/FormForge/actions/workflows/deploy.yml)
+[![React 19](https://img.shields.io/badge/React-19-087ea4?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite 8](https://img.shields.io/badge/Vite-8-a855f7?logo=vite&logoColor=white)](https://vite.dev)
+[![Zero backend](https://img.shields.io/badge/backend-none-cdf463)](https://timorfiy.github.io/FormForge/)
 
-- React 19 + TypeScript (strict, discriminated-union block model)
-- Vite 8, oxlint
-- Plain CSS with a custom design system (Geist / Geist Mono, dark glass shell + light paper canvas)
+</div>
 
-## Development
+---
 
-```bash
-npm install
-npm run dev      # start dev server
-npm run build    # type-check + production build
-npm run lint     # oxlint
-npm run preview  # serve the production build
-```
+## ✨ Features
 
-## Deployment
+<table>
+<tr>
+<td width="50%">
 
-Pushes to `main` build and deploy to GitHub Pages automatically via `.github/workflows/deploy.yml`. The site is served under the `/FormForge/` base path (configured in `vite.config.ts`).
+🧱 **15 block types** — headings, paragraphs, dividers (3 styles), short/long text, email, phone, URL, number, date, dropdown, single & multiple choice, switch, star rating
 
-## Form JSON schema
+🎨 **3 form styles** — Classic, Noir and Soft themes restyle the whole form in one click
+
+🖱️ **Drag & drop** — pull blocks from the palette, reorder with live drop indicators; zero DnD dependencies
+
+🔍 **Inspector** — labels, placeholders, help text, required flags, options, min/max, star counts
+
+</td>
+<td width="50%">
+
+📅 **Hand-built controls** — calendar date picker with month/year jump views and keyboard entry, animated dropdown listbox, phone masks for RU / US / UK / DE / FR
+
+👀 **Live preview** — real validation (required, formats, ranges, masks), animated success screen with the submitted JSON payload
+
+📦 **Export / import** — portable form JSON with full validation and coercion on load
+
+↩️ **Comfort** — undo/redo history, keyboard shortcuts, templates, autosave to `localStorage`
+
+</td>
+</tr>
+</table>
+
+## 🚀 How it works
+
+1. **Pick blocks** from the palette — click or drag them onto the paper.
+2. **Tune everything** in the inspector — or restyle the whole form with one style card.
+3. **Preview & export** — test the live form, then copy or download its JSON definition.
+
+Start fast with a template: *Contact form · Event RSVP · Job application · Product feedback*.
+
+## ⌨️ Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl / ⌘ + Z` | Undo |
+| `Ctrl / ⌘ + Shift + Z` · `Ctrl + Y` | Redo |
+| `Delete` / `Backspace` | Remove selected block |
+| `Ctrl / ⌘ + D` | Duplicate selected block |
+| `Esc` | Deselect / close dialog |
+
+## 🧰 Tech stack
+
+- **React 19 + TypeScript** — strict mode, discriminated-union block model
+- **Vite 8** + oxlint
+- **Plain CSS** — custom design system (Geist / Geist Mono, dark glass shell, spring motion)
+- **No UI libraries** — every control (calendar, listbox, masks, DnD) is hand-rolled
+
+## 📦 Form JSON schema
 
 ```jsonc
 {
@@ -63,3 +97,52 @@ Pushes to `main` build and deploy to GitHub Pages automatically via `.github/wor
   ]
 }
 ```
+
+## 🛠️ Development
+
+```bash
+npm install
+npm run dev      # start dev server
+npm run build    # type-check + production build
+npm run lint     # oxlint
+npm run preview  # serve the production build
+```
+
+<details>
+<summary><b>Project structure</b></summary>
+
+```
+src/
+├── types.ts              # discriminated-union block model + form styles
+├── store.tsx             # reducer, undo/redo history, localStorage persistence
+├── templates.ts          # 5 starter templates
+├── blocks/
+│   └── registry.ts       # block metadata + default factories
+├── lib/
+│   ├── masks.ts          # phone country masks (format / validate)
+│   └── serialize.ts      # JSON export / import with coercion
+└── components/
+    ├── TopBar.tsx        # brand, mode switch, templates, export
+    ├── Palette.tsx       # draggable block palette
+    ├── Canvas.tsx        # builder paper, HTML5 drag & drop
+    ├── Inspector.tsx     # block + form settings
+    ├── Preview.tsx       # live form, validation, success screen
+    ├── DatePicker.tsx    # calendar with month/year views, keyboard entry
+    ├── CustomSelect.tsx  # animated listbox with keyboard navigation
+    ├── PhoneInput.tsx    # masked phone input
+    └── ExportModal.tsx   # export / import dialog
+```
+
+</details>
+
+## 🚢 Deployment
+
+Pushes to `main` build and deploy to GitHub Pages automatically via
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+The site is served under the `/FormForge/` base path (set in `vite.config.ts`).
+
+---
+
+<div align="center">
+Built by <a href="https://github.com/Timorfiy">Timorfiy</a> · <a href="https://timorfiy.github.io/FormForge/">timorfiy.github.io/FormForge</a>
+</div>
