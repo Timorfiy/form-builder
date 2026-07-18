@@ -20,32 +20,14 @@ Drag blocks, tune every detail, preview instantly, export clean JSON. No backend
 
 ## Features
 
-<table>
-<tr>
-<td width="50%">
-
-**15 block types** — headings, paragraphs, dividers (3 styles), short/long text, email, phone, URL, number, date, dropdown, single & multiple choice, switch, star rating
-
-**3 form styles** — Classic, Noir and Soft themes restyle the whole form in one click
-
-**Drag & drop** — pull blocks from the palette, reorder with live drop indicators; zero DnD dependencies
-
-**Inspector** — labels, placeholders, help text, required flags, options, min/max, star counts
-
-</td>
-<td width="50%">
-
-**Hand-built controls** — calendar date picker with month/year jump views and keyboard entry, animated dropdown listbox, phone masks for RU / US / UK / DE / FR
-
-**Live preview** — real validation (required, formats, ranges, masks), animated success screen with the submitted JSON payload
-
-**Export / import** — portable form JSON with full validation and coercion on load
-
-**Comfort** — undo/redo history, keyboard shortcuts, templates, autosave to `localStorage`
-
-</td>
-</tr>
-</table>
+- **15 block types** — headings, paragraphs, dividers (3 styles), short/long text, email, phone, URL, number, date, dropdown, single & multiple choice, switch, star rating
+- **3 form styles** — Classic, Noir and Soft themes restyle the whole form in one click
+- **Drag & drop** — pull blocks from the palette, reorder with live drop indicators; zero DnD dependencies
+- **Inspector** — labels, placeholders, help text, required flags, options, min/max, star counts
+- **Hand-built controls** — calendar date picker with month/year jump views and keyboard entry, animated dropdown listbox, phone masks for RU / US / UK / DE / FR
+- **Live preview** — real validation (required, formats, ranges, masks), animated success screen with the submitted JSON payload
+- **Export / import** — portable form JSON with full validation and coercion on load
+- **Comfort** — undo/redo history, keyboard shortcuts, templates, autosave to `localStorage`
 
 ## How it works
 
