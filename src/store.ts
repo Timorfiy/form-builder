@@ -153,7 +153,7 @@ export function reducer(state: BuilderState, action: Action): BuilderState {
 
     case 'load-doc': {
       const next = commit(state, action.doc, null)
-      return { ...next, selectedId: null, mode: 'build', modal: null }
+      return { ...next, selectedId: null, modal: null }
     }
 
     case 'select':

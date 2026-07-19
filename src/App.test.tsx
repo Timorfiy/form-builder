@@ -38,12 +38,10 @@ describe('template selection from Preview', () => {
       if (!templateButton) throw new Error(`Template button not found: ${templateName}`)
       await user.click(templateButton)
 
-      expect(screen.getByRole('tab', { name: 'Build' })).toHaveAttribute(
+      expect(screen.getByRole('tab', { name: 'Preview' })).toHaveAttribute(
         'aria-selected',
         'true',
       )
-
-      await user.click(screen.getByRole('tab', { name: 'Preview' }))
 
       expect(screen.getByRole('heading', { name: title, level: 1 })).toBeInTheDocument()
       expect(screen.getByRole('group', { name: checkboxGroup })).toBeInTheDocument()

@@ -15,7 +15,7 @@ function doc(title: string): FormDoc {
 describe('builder reducer document replacement', () => {
   beforeEach(() => localStorage.clear())
 
-  it('loads a document into Build, clears selection, and closes the modal', () => {
+  it('loads a document without changing mode, clears selection, and closes the modal', () => {
     const state = {
       ...createBuilderState(doc('Before')),
       mode: 'preview' as const,
@@ -25,7 +25,7 @@ describe('builder reducer document replacement', () => {
 
     expect(reducer(state, { type: 'load-doc', doc: doc('After') })).toMatchObject({
       doc: { title: 'After' },
-      mode: 'build',
+      mode: 'preview',
       selectedId: null,
       modal: null,
     })
