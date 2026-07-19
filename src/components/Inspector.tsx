@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useBuilder } from '../store'
+import { useBuilder } from '../useBuilder'
 import type { Block, NumberBlock, OptionsBlock, RatingBlock } from '../types'
 import { FORM_STYLES } from '../types'
 import { PHONE_MASKS } from '../lib/masks'

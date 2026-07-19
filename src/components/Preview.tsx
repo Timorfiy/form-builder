@@ -1,95 +1,21 @@
 import { useMemo, useState } from 'react'
-import { useBuilder } from '../store'
-import type { Block, FormDoc } from '../types'
+import { useBuilder } from '../useBuilder'
+import type { Block } from '../types'
 import { isFieldKind } from '../types'
-import { extractNationalDigits, getMask, nationalDigitCount } from '../lib/masks'
+import {
+  buildPayload,
+  initValues,
+  initialValueForBlock,
+  validate,
+  type Errors,
+  type FieldValidity,
+  type Value,
+  type Values,
+} from '../lib/previewLogic'
 import { Icon } from './Icon'
 import { DatePicker } from './DatePicker'
 import { CustomSelect } from './CustomSelect'
 import { PhoneInput } from './PhoneInput'
-
-type Value = string | number | boolean | string[]
-type Values = Record<string, Value>
-type Errors = Record<string, string>
-
-function initValues(doc: FormDoc): Values {
-  const values: Values = {}
-  for (const b of doc.blocks) {
-    switch (b.kind) {
-      case 'checkboxes':
-        values[b.id] = []
-        break
-      case 'switch':
-        values[b.id] = b.defaultOn
-        break
-      case 'rating':
-        values[b.id] = 0
-        break
-      default:
-        values[b.id] = ''
-    }
-  }
-  return values
-}
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const URL_RE = /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/
-const PHONE_RE = /^[+()\-.\s\d]{7,20}$/
-
-function validate(doc: FormDoc, values: Values): Errors {
-  const errors: Errors = {}
-  for (const b of doc.blocks) {
-    if (!isFieldKind(b.kind)) continue
-    const v = values[b.id]
-
-    if ('required' in b && b.required) {
-      const empty =
-        (typeof v === 'string' && v.trim() === '') ||
-        (Array.isArray(v) && v.length === 0) ||
-        (b.kind === 'rating' && typeof v === 'number' && v === 0)
-      if (empty) {
-        errors[b.id] = 'This field is required.'
-        continue
-      }
-    }
-
-    if (typeof v === 'string' && v.trim() !== '') {
-      if (b.kind === 'email' && !EMAIL_RE.test(v)) errors[b.id] = 'Enter a valid email address.'
-      else if (b.kind === 'url' && !URL_RE.test(v.trim())) errors[b.id] = 'Enter a valid URL.'
-      else if (b.kind === 'phone') {
-        const def = getMask(b.mask)
-        if (def) {
-          if (extractNationalDigits(v, def).length !== nationalDigitCount(def)) {
-            errors[b.id] = 'Enter a complete phone number.'
-          }
-        } else if (!PHONE_RE.test(v)) {
-          errors[b.id] = 'Enter a valid phone number.'
-        }
-      } else if (b.kind === 'number') {
-        const n = Number(v)
-        if (Number.isNaN(n)) errors[b.id] = 'Enter a number.'
-        else if (b.min !== null && n < b.min) errors[b.id] = `Must be at least ${b.min}.`
-        else if (b.max !== null && n > b.max) errors[b.id] = `Must be at most ${b.max}.`
-      }
-    }
-  }
-  return errors
-}
-
-function buildPayload(doc: FormDoc, values: Values): Record<string, Value> {
-  const payload: Record<string, Value> = {}
-  const seen = new Map<string, number>()
-  for (const b of doc.blocks) {
-    if (!isFieldKind(b.kind) || !('label' in b)) continue
-    let key = b.label
-    const count = seen.get(key) ?? 0
-    seen.set(key, count + 1)
-    if (count > 0) key = `${key} (${count + 1})`
-    const v = values[b.id]
-    payload[key] = b.kind === 'number' && typeof v === 'string' && v !== '' ? Number(v) : v
-  }
-  return payload
-}
 
 /* ---------- field renderers ---------- */
 
@@ -98,6 +24,15 @@ interface FieldProps {
   value: Value
   error?: string
   set: (v: Value) => void
+  onValidityChange: (valid: boolean) => void
+}
+
+interface ControlA11yProps {
+  id: string
+  'aria-labelledby': string
+  'aria-describedby'?: string
+  'aria-invalid'?: boolean
+  'aria-required'?: boolean
 }
 
 function FieldFrame({
@@ -107,25 +42,51 @@ function FieldFrame({
 }: {
   block: Block & { label: string; helpText?: string }
   error?: string
-  children: React.ReactNode
+  children: (a11y: ControlA11yProps) => React.ReactNode
 }) {
+  const fieldId = `pf-${block.id}`
+  const labelId = `${fieldId}-label`
+  const helpId = `${fieldId}-help`
+  const errorId = `${fieldId}-error`
+  const describedBy = [block.helpText ? helpId : '', error ? errorId : '']
+    .filter(Boolean)
+    .join(' ') || undefined
+  const a11y: ControlA11yProps = {
+    id: `${fieldId}-control`,
+    'aria-labelledby': labelId,
+    'aria-describedby': describedBy,
+    'aria-invalid': error ? true : undefined,
+    'aria-required': 'required' in block && block.required ? true : undefined,
+  }
+
   return (
-    <div className={`pv-field ${error ? 'has-error' : ''}`} id={`pf-${block.id}`}>
+    <div className={`pv-field ${error ? 'has-error' : ''}`} id={fieldId}>
       <span className="pv-label">
-        {block.label}
-        {'required' in block && block.required && <span className="pv-required">*</span>}
+        <label id={labelId} htmlFor={a11y.id}>
+          {block.label}
+        </label>
+        {'required' in block && block.required && (
+          <span className="pv-required" aria-hidden="true">
+            *
+          </span>
+        )}
       </span>
-      {children}
-      {error ? (
-        <span className="pv-error">{error}</span>
-      ) : (
-        block.helpText && <span className="pv-help">{block.helpText}</span>
+      {children(a11y)}
+      {block.helpText && (
+        <span className="pv-help" id={helpId}>
+          {block.helpText}
+        </span>
+      )}
+      {error && (
+        <span className="pv-error" id={errorId} role="alert">
+          {error}
+        </span>
       )}
     </div>
   )
 }
 
-function PreviewField({ block, value, error, set }: FieldProps) {
+function PreviewField({ block, value, error, set, onValidityChange }: FieldProps) {
   const [hoverStar, setHoverStar] = useState(0)
 
   switch (block.kind) {
@@ -148,86 +109,148 @@ function PreviewField({ block, value, error, set }: FieldProps) {
     case 'longText':
       return (
         <FieldFrame block={block} error={error}>
-          <textarea
-            className="pv-input"
-            rows={block.rows}
-            placeholder={block.placeholder}
-            value={value as string}
-            onChange={(e) => set(e.target.value)}
-          />
+          {(a11y) => (
+            <textarea
+              {...a11y}
+              className="pv-input"
+              rows={block.rows}
+              placeholder={block.placeholder}
+              value={value as string}
+              onChange={(e) => set(e.target.value)}
+            />
+          )}
         </FieldFrame>
       )
 
     case 'date':
       return (
         <FieldFrame block={block} error={error}>
-          <DatePicker value={value as string} onChange={set} />
+          {(a11y) => (
+            <DatePicker
+              {...a11y}
+              value={value as string}
+              onChange={set}
+              onValidityChange={onValidityChange}
+            />
+          )}
         </FieldFrame>
       )
 
     case 'phone':
       return (
         <FieldFrame block={block} error={error}>
-          <PhoneInput
-            value={value as string}
-            onChange={set}
-            maskId={block.mask}
-            placeholder={block.placeholder}
-          />
+          {(a11y) => (
+            <PhoneInput
+              {...a11y}
+              value={value as string}
+              onChange={set}
+              maskId={block.mask}
+              placeholder={block.placeholder}
+            />
+          )}
         </FieldFrame>
       )
 
     case 'dropdown':
       return (
         <FieldFrame block={block} error={error}>
-          <CustomSelect value={value as string} options={block.options} onChange={set} />
+          {(a11y) => (
+            <CustomSelect
+              {...a11y}
+              value={value as string}
+              options={block.options}
+              onChange={set}
+            />
+          )}
         </FieldFrame>
       )
 
     case 'radio':
       return (
         <FieldFrame block={block} error={error}>
-          <div className="pv-options">
-            {block.options.map((o, i) => (
-              <label key={i} className={`pv-choice ${value === o ? 'is-checked' : ''}`}>
-                <input
-                  type="radio"
-                  name={block.id}
-                  checked={value === o}
-                  onChange={() => set(o)}
-                />
-                <span className="pv-choice-mark" />
-                <span>{o}</span>
-              </label>
-            ))}
-          </div>
+          {(a11y) => (
+            <div
+              id={a11y.id}
+              className="pv-options"
+              role="radiogroup"
+              aria-labelledby={a11y['aria-labelledby']}
+              aria-describedby={a11y['aria-describedby']}
+              aria-invalid={a11y['aria-invalid']}
+              aria-required={a11y['aria-required']}
+            >
+              {block.options.map((option, index) => {
+                const optionId = `${a11y.id}-${index}`
+                return (
+                  <label
+                    key={index}
+                    htmlFor={optionId}
+                    className={`pv-choice ${value === option ? 'is-checked' : ''}`}
+                  >
+                    <input
+                      id={optionId}
+                      type="radio"
+                      name={block.id}
+                      checked={value === option}
+                      onChange={() => set(option)}
+                      aria-describedby={a11y['aria-describedby']}
+                      aria-invalid={a11y['aria-invalid']}
+                    />
+                    <span className="pv-choice-mark" />
+                    <span>{option}</span>
+                  </label>
+                )
+              })}
+            </div>
+          )}
         </FieldFrame>
       )
 
     case 'checkboxes': {
-      const arr = value as string[]
+      const selected = value as string[]
       return (
         <FieldFrame block={block} error={error}>
-          <div className="pv-options">
-            {block.options.map((o, i) => {
-              const checked = arr.includes(o)
-              return (
-                <label key={i} className={`pv-choice is-box ${checked ? 'is-checked' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() =>
-                      set(checked ? arr.filter((x) => x !== o) : [...arr, o])
-                    }
-                  />
-                  <span className="pv-choice-mark">
-                    <Icon name="check" size={11} strokeWidth={2.4} />
-                  </span>
-                  <span>{o}</span>
-                </label>
-              )
-            })}
-          </div>
+          {(a11y) => (
+            <div
+              id={a11y.id}
+              className="pv-options"
+              role="group"
+              aria-labelledby={a11y['aria-labelledby']}
+              aria-describedby={a11y['aria-describedby']}
+              aria-invalid={a11y['aria-invalid']}
+              aria-required={a11y['aria-required']}
+            >
+              {block.options.map((option, index) => {
+                const checked = selected.includes(option)
+                const optionId = `${a11y.id}-${index}`
+                return (
+                  <label
+                    key={index}
+                    htmlFor={optionId}
+                    className={`pv-choice is-box ${checked ? 'is-checked' : ''}`}
+                  >
+                    <input
+                      id={optionId}
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        set(
+                          checked
+                            ? selected.filter((item) => item !== option)
+                            : [...selected, option],
+                        )
+                      }
+                      aria-describedby={a11y['aria-describedby']}
+                      aria-invalid={a11y['aria-invalid']}
+                    />
+                    <span className="pv-choice-mark">
+                      <Icon name="check" size={11} strokeWidth={2.4} />
+                    </span>
+                    <span>{option}</span>
+                  </label>
+                )
+              })}
+            </div>
+          )}
         </FieldFrame>
       )
     }
@@ -236,15 +259,18 @@ function PreviewField({ block, value, error, set }: FieldProps) {
       const on = value as boolean
       return (
         <FieldFrame block={block} error={error}>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={on}
-            className={`pv-switch ${on ? 'is-on' : ''}`}
-            onClick={() => set(!on)}
-          >
-            <span className="pv-switch-knob" />
-          </button>
+          {(a11y) => (
+            <button
+              {...a11y}
+              type="button"
+              role="switch"
+              aria-checked={on}
+              className={`pv-switch ${on ? 'is-on' : ''}`}
+              onClick={() => set(!on)}
+            >
+              <span className="pv-switch-knob" />
+            </button>
+          )}
         </FieldFrame>
       )
     }
@@ -254,25 +280,38 @@ function PreviewField({ block, value, error, set }: FieldProps) {
       const shown = hoverStar || current
       return (
         <FieldFrame block={block} error={error}>
-          <div className="pv-stars" onMouseLeave={() => setHoverStar(0)}>
-            {Array.from({ length: block.max }, (_, i) => {
-              const n = i + 1
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  className={`pv-star ${n <= shown ? 'is-lit' : ''}`}
-                  onMouseEnter={() => setHoverStar(n)}
-                  onClick={() => set(n === current ? 0 : n)}
-                  aria-label={`${n} of ${block.max}`}
-                >
-                  <svg viewBox="0 0 24 24" width="26" height="26">
-                    <path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8L12 4Z" />
-                  </svg>
-                </button>
-              )
-            })}
-          </div>
+          {(a11y) => (
+            <div
+              id={a11y.id}
+              className="pv-stars"
+              role="radiogroup"
+              aria-labelledby={a11y['aria-labelledby']}
+              aria-describedby={a11y['aria-describedby']}
+              aria-invalid={a11y['aria-invalid']}
+              aria-required={a11y['aria-required']}
+              onMouseLeave={() => setHoverStar(0)}
+            >
+              {Array.from({ length: block.max }, (_, index) => {
+                const rating = index + 1
+                return (
+                  <button
+                    key={rating}
+                    type="button"
+                    role="radio"
+                    aria-checked={rating === current}
+                    className={`pv-star ${rating <= shown ? 'is-lit' : ''}`}
+                    onMouseEnter={() => setHoverStar(rating)}
+                    onClick={() => set(rating === current ? 0 : rating)}
+                    aria-label={`${rating} of ${block.max}`}
+                  >
+                    <svg viewBox="0 0 24 24" width="26" height="26">
+                      <path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8L12 4Z" />
+                    </svg>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </FieldFrame>
       )
     }
@@ -288,15 +327,18 @@ function PreviewField({ block, value, error, set }: FieldProps) {
               : 'text'
       return (
         <FieldFrame block={block} error={error}>
-          <input
-            className="pv-input"
-            type={type}
-            placeholder={block.placeholder}
-            value={value as string}
-            min={block.kind === 'number' ? (block.min ?? undefined) : undefined}
-            max={block.kind === 'number' ? (block.max ?? undefined) : undefined}
-            onChange={(e) => set(e.target.value)}
-          />
+          {(a11y) => (
+            <input
+              {...a11y}
+              className="pv-input"
+              type={type}
+              placeholder={block.placeholder}
+              value={value as string}
+              min={block.kind === 'number' ? (block.min ?? undefined) : undefined}
+              max={block.kind === 'number' ? (block.max ?? undefined) : undefined}
+              onChange={(e) => set(e.target.value)}
+            />
+          )}
         </FieldFrame>
       )
     }
@@ -310,6 +352,7 @@ export function Preview() {
   const { doc } = state
   const [values, setValues] = useState<Values>(() => initValues(doc))
   const [errors, setErrors] = useState<Errors>({})
+  const [fieldValidity, setFieldValidity] = useState<FieldValidity>({})
   const [payload, setPayload] = useState<Record<string, Value> | null>(null)
 
   const fieldCount = useMemo(
@@ -327,15 +370,34 @@ export function Preview() {
     })
   }
 
+  const setValidity = (id: string, valid: boolean) => {
+    setFieldValidity((previous) => {
+      if (previous[id] === valid) return previous
+      return { ...previous, [id]: valid }
+    })
+  }
+
+  const focusField = (id: string) => {
+    const control = document.getElementById(`pf-${id}-control`)
+    const target =
+      control instanceof HTMLInputElement ||
+      control instanceof HTMLTextAreaElement ||
+      control instanceof HTMLButtonElement
+        ? control
+        : control?.querySelector<HTMLElement>('input, textarea, button, [tabindex]:not([tabindex="-1"])')
+    target?.focus({ preventScroll: true })
+    document
+      .getElementById(`pf-${id}`)
+      ?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  }
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    const errs = validate(doc, values)
+    const errs = validate(doc, values, fieldValidity)
     setErrors(errs)
     const firstErrorId = Object.keys(errs)[0]
     if (firstErrorId) {
-      document
-        .getElementById(`pf-${firstErrorId}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      focusField(firstErrorId)
       return
     }
     setPayload(buildPayload(doc, values))
@@ -344,6 +406,7 @@ export function Preview() {
   const reset = () => {
     setValues(initValues(doc))
     setErrors({})
+    setFieldValidity({})
     setPayload(null)
   }
 
@@ -396,13 +459,14 @@ export function Preview() {
             ) : (
               <>
                 <div className="pv-fields">
-                  {doc.blocks.map((b) => (
+                  {doc.blocks.map((b, index) => (
                     <PreviewField
-                      key={b.id}
+                      key={b.id || `${b.kind}-${index}`}
                       block={b}
-                      value={values[b.id]}
+                      value={values[b.id] ?? initialValueForBlock(b)}
                       error={errors[b.id]}
                       set={(v) => setValue(b.id, v)}
+                      onValidityChange={(valid) => setValidity(b.id, valid)}
                     />
                   ))}
                 </div>

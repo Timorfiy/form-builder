@@ -1,16 +1,9 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  type ReactNode,
-} from 'react'
+import { createBlock } from './blocks/registry'
+import { parseDoc } from './lib/serialize'
 import type { Block, BlockKind, FormDoc } from './types'
 import { uid } from './types'
-import { createBlock } from './blocks/registry'
 
-const STORAGE_KEY = 'formforge-doc-v1'
+export const STORAGE_KEY = 'formforge-doc-v1'
 const HISTORY_LIMIT = 80
 const COALESCE_MS = 900
 
@@ -46,53 +39,35 @@ export type Action =
   | { type: 'undo' }
   | { type: 'redo' }
 
-function loadInitial(): FormDoc {
-  const fallback: FormDoc = {
+export function createDefaultDoc(): FormDoc {
+  return {
     title: 'Untitled form',
     description: '',
     submitLabel: 'Submit',
     style: 'classic',
     blocks: [],
   }
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<FormDoc>
-      if (parsed && Array.isArray(parsed.blocks)) {
-        return {
-          title: typeof parsed.title === 'string' ? parsed.title : fallback.title,
-          description:
-            typeof parsed.description === 'string' ? parsed.description : fallback.description,
-          submitLabel:
-            typeof parsed.submitLabel === 'string' ? parsed.submitLabel : fallback.submitLabel,
-          style:
-            parsed.style === 'noir' || parsed.style === 'soft' ? parsed.style : 'classic',
-          // backfill fields introduced after the doc was saved
-          blocks: parsed.blocks.map((b) => {
-            if (b.kind === 'phone' && (b as { mask?: unknown }).mask === undefined) {
-              return { ...b, mask: 'none' as const }
-            }
-            if (b.kind === 'divider' && (b as { variant?: unknown }).variant === undefined) {
-              return { ...b, variant: 'line' as const }
-            }
-            return b
-          }),
-        }
-      }
-    }
-  } catch {
-    /* corrupted storage — fall through to default */
-  }
-  return fallback
 }
 
-const initialState: BuilderState = {
-  doc: loadInitial(),
-  past: [],
-  future: [],
-  selectedId: null,
-  mode: 'build',
-  modal: null,
+export function loadInitial(): FormDoc {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return parseDoc(JSON.parse(raw))
+  } catch {
+    // Corrupted or unavailable storage is replaced with a fresh document.
+  }
+  return createDefaultDoc()
+}
+
+export function createBuilderState(doc: FormDoc = loadInitial()): BuilderState {
+  return {
+    doc,
+    past: [],
+    future: [],
+    selectedId: null,
+    mode: 'build',
+    modal: null,
+  }
 }
 
 /** Push current doc onto the undo stack, coalescing rapid edits of the same field. */
@@ -115,11 +90,13 @@ function commit(state: BuilderState, nextDoc: FormDoc, coalesceKey: string | nul
 function updateBlockIn(doc: FormDoc, id: string, patch: Partial<Block>): FormDoc {
   return {
     ...doc,
-    blocks: doc.blocks.map((b) => (b.id === id ? ({ ...b, ...patch } as Block) : b)),
+    blocks: doc.blocks.map((block) =>
+      block.id === id ? ({ ...block, ...patch } as Block) : block,
+    ),
   }
 }
 
-function reducer(state: BuilderState, action: Action): BuilderState {
+export function reducer(state: BuilderState, action: Action): BuilderState {
   switch (action.type) {
     case 'add-block': {
       const block = createBlock(action.kind)
@@ -131,9 +108,9 @@ function reducer(state: BuilderState, action: Action): BuilderState {
     }
 
     case 'move-block': {
-      const from = state.doc.blocks.findIndex((b) => b.id === action.id)
+      const from = state.doc.blocks.findIndex((block) => block.id === action.id)
       if (from === -1) return state
-      let to = Math.max(0, Math.min(action.toIndex, state.doc.blocks.length - 1))
+      const to = Math.max(0, Math.min(action.toIndex, state.doc.blocks.length - 1))
       if (from === to) return state
       const blocks = [...state.doc.blocks]
       const [moved] = blocks.splice(from, 1)
@@ -151,14 +128,14 @@ function reducer(state: BuilderState, action: Action): BuilderState {
     case 'remove-block': {
       const next = commit(
         state,
-        { ...state.doc, blocks: state.doc.blocks.filter((b) => b.id !== action.id) },
+        { ...state.doc, blocks: state.doc.blocks.filter((block) => block.id !== action.id) },
         null,
       )
       return { ...next, selectedId: state.selectedId === action.id ? null : state.selectedId }
     }
 
     case 'duplicate-block': {
-      const from = state.doc.blocks.findIndex((b) => b.id === action.id)
+      const from = state.doc.blocks.findIndex((block) => block.id === action.id)
       if (from === -1) return state
       const copy = { ...state.doc.blocks[from], id: uid() }
       const blocks = [...state.doc.blocks]
@@ -176,7 +153,7 @@ function reducer(state: BuilderState, action: Action): BuilderState {
 
     case 'load-doc': {
       const next = commit(state, action.doc, null)
-      return { ...next, selectedId: null }
+      return { ...next, selectedId: null, mode: 'build', modal: null }
     }
 
     case 'select':
@@ -197,6 +174,7 @@ function reducer(state: BuilderState, action: Action): BuilderState {
         past: state.past.slice(0, -1),
         future: [state.doc, ...state.future].slice(0, HISTORY_LIMIT),
         selectedId: null,
+        mode: 'build',
       }
     }
 
@@ -209,35 +187,8 @@ function reducer(state: BuilderState, action: Action): BuilderState {
         past: [...state.past, { doc: state.doc, coalesceKey: null, time: Date.now() }],
         future: rest,
         selectedId: null,
+        mode: 'build',
       }
     }
   }
-}
-
-interface BuilderContextValue {
-  state: BuilderState
-  dispatch: React.Dispatch<Action>
-}
-
-const BuilderContext = createContext<BuilderContextValue | null>(null)
-
-export function BuilderProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState)
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.doc))
-    } catch {
-      /* storage full or unavailable — editing still works */
-    }
-  }, [state.doc])
-
-  const value = useMemo(() => ({ state, dispatch }), [state])
-  return <BuilderContext.Provider value={value}>{children}</BuilderContext.Provider>
-}
-
-export function useBuilder(): BuilderContextValue {
-  const ctx = useContext(BuilderContext)
-  if (!ctx) throw new Error('useBuilder must be used inside BuilderProvider')
-  return ctx
 }

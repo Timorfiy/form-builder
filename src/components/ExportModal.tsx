@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useBuilder } from '../store'
+import { useBuilder } from '../useBuilder'
 import { serializeDoc, parseDoc } from '../lib/serialize'
 import { Icon } from './Icon'
 

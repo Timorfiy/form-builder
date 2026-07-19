@@ -1,4 +1,4 @@
-import { useBuilder } from '../store'
+import { useBuilder } from '../useBuilder'
 import { BLOCK_REGISTRY, PALETTE_GROUPS } from '../blocks/registry'
 import type { BlockKind } from '../types'
 import { Icon } from './Icon'

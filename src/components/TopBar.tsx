@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useBuilder } from '../store'
+import { useBuilder } from '../useBuilder'
 import { TEMPLATES } from '../templates'
 import { Icon } from './Icon'
 

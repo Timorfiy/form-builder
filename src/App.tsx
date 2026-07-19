@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { BuilderProvider, useBuilder } from './store'
+import { BuilderProvider } from './BuilderProvider'
+import { useBuilder } from './useBuilder'
 import { TopBar } from './components/TopBar'
 import { Palette } from './components/Palette'
 import { Canvas } from './components/Canvas'

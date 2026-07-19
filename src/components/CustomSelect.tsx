@@ -2,15 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 
 export function CustomSelect({
+  id,
   value,
   options,
   onChange,
+  'aria-labelledby': ariaLabelledby,
+  'aria-describedby': ariaDescribedby,
+  'aria-invalid': ariaInvalid,
+  'aria-required': ariaRequired,
   placeholder = 'Select…',
 }: {
+  id: string
   value: string
   options: string[]
   onChange: (v: string) => void
   placeholder?: string
+  'aria-labelledby': string
+  'aria-describedby'?: string
+  'aria-invalid'?: boolean
+  'aria-required'?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [highlight, setHighlight] = useState(-1)
@@ -76,18 +86,31 @@ export function CustomSelect({
   return (
     <div className="cs" ref={rootRef} onKeyDown={onKeyDown}>
       <button
+        id={id}
         type="button"
         className={`pv-input cs-trigger ${value ? '' : 'is-empty'} ${open ? 'is-open' : ''}`}
         onClick={() => (open ? setOpen(false) : openList())}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={`${id}-listbox`}
+        aria-labelledby={ariaLabelledby}
+        aria-describedby={ariaDescribedby}
+        aria-invalid={ariaInvalid}
+        aria-required={ariaRequired}
       >
         <span className="cs-value">{value || placeholder}</span>
         <Icon name="chevronDown" size={15} className={`cs-chevron ${open ? 'rot-180' : ''}`} />
       </button>
 
       {open && (
-        <ul className="cs-list" role="listbox" ref={listRef} tabIndex={-1}>
+        <ul
+          id={`${id}-listbox`}
+          className="cs-list"
+          role="listbox"
+          aria-labelledby={ariaLabelledby}
+          ref={listRef}
+          tabIndex={-1}
+        >
           {options.map((opt, i) => {
             const isSelected = opt === value
             return (

@@ -1,5 +1,5 @@
 import { useState, type DragEvent } from 'react'
-import { useBuilder } from '../store'
+import { useBuilder } from '../useBuilder'
 import type { Block, BlockKind } from '../types'
 import { getMeta } from '../blocks/registry'
 import { getMask, maskPlaceholder } from '../lib/masks'

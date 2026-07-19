@@ -80,13 +80,25 @@ function buildGrid(y: number, m: number): DayCell[] {
 }
 
 export function DatePicker({
+  id,
   value,
   onChange,
+  onValidityChange,
   placeholder = 'DD.MM.YYYY',
+  'aria-labelledby': ariaLabelledby,
+  'aria-describedby': ariaDescribedby,
+  'aria-invalid': ariaInvalid,
+  'aria-required': ariaRequired,
 }: {
+  id: string
   value: string
   onChange: (v: string) => void
+  onValidityChange: (valid: boolean) => void
   placeholder?: string
+  'aria-labelledby': string
+  'aria-describedby'?: string
+  'aria-invalid'?: boolean
+  'aria-required'?: boolean
 }) {
   const selected = parseISO(value)
   const today = new Date()
@@ -150,6 +162,7 @@ export function DatePicker({
     setText(dotMask(digits))
     if (digits.length === 0) {
       setInvalid(false)
+      onValidityChange(true)
       onChange('')
       return
     }
@@ -157,24 +170,25 @@ export function DatePicker({
       const parsed = parseDisplay(dotMask(digits))
       if (parsed) {
         setInvalid(false)
+        onValidityChange(true)
         onChange(toISO(parsed))
         setView({ y: parsed.y, m: parsed.m })
       } else {
         setInvalid(true)
+        onValidityChange(false)
       }
     } else {
-      setInvalid(false)
+      setInvalid(true)
+      onValidityChange(false)
     }
   }
 
-  const onBlur = () => {
-    // discard incomplete/invalid partial input
-    setText(isoToDisplay(value))
-    setInvalid(false)
-  }
-
   const pick = (ymd: YMD) => {
-    onChange(toISO(ymd))
+    const nextValue = toISO(ymd)
+    setText(isoToDisplay(nextValue))
+    setInvalid(false)
+    onValidityChange(true)
+    onChange(nextValue)
     setOpen(false)
   }
 
@@ -185,15 +199,18 @@ export function DatePicker({
     <div className="dp" ref={rootRef}>
       <div className={`dp-input-wrap ${open ? 'is-open' : ''} ${invalid ? 'is-invalid' : ''}`}>
         <input
+          id={id}
           className="dp-input"
           value={text}
           onChange={onTextChange}
-          onBlur={onBlur}
           placeholder={placeholder}
           inputMode="numeric"
           autoComplete="off"
           spellCheck={false}
-          aria-label="Date (DD.MM.YYYY)"
+          aria-labelledby={ariaLabelledby}
+          aria-describedby={ariaDescribedby}
+          aria-invalid={invalid || ariaInvalid || undefined}
+          aria-required={ariaRequired}
         />
         <button
           type="button"
@@ -304,6 +321,9 @@ export function DatePicker({
                 type="button"
                 className="dp-mini"
                 onClick={() => {
+                  setText('')
+                  setInvalid(false)
+                  onValidityChange(true)
                   onChange('')
                   setOpen(false)
                 }}

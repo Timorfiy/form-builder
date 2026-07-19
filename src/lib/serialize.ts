@@ -7,8 +7,10 @@ const VALID_STYLES = new Set<FormStyle>(['classic', 'noir', 'soft'])
 const VALID_DIVIDERS = new Set<DividerVariant>(['line', 'dashed', 'dots'])
 const VALID_MASKS = new Set<PhoneMaskId>(['none', 'ru', 'us', 'uk', 'de', 'fr'])
 
+export const CURRENT_SCHEMA_VERSION = 1
+
 export function serializeDoc(doc: FormDoc): string {
-  return JSON.stringify({ $formforge: 1, ...doc }, null, 2)
+  return JSON.stringify({ $formforge: CURRENT_SCHEMA_VERSION, ...doc }, null, 2)
 }
 
 function str(v: unknown, fallback: string): string {
@@ -23,6 +25,12 @@ function numOrNull(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null
 }
 
+function clampedInteger(v: unknown, fallback: number, min: number, max: number): number {
+  const value = numOrNull(v)
+  if (value === null) return fallback
+  return Math.min(max, Math.max(min, Math.trunc(value)))
+}
+
 function strArray(v: unknown, fallback: string[]): string[] {
   if (!Array.isArray(v)) return fallback
   const items = v.filter((x): x is string => typeof x === 'string')
@@ -35,6 +43,9 @@ export function parseDoc(raw: unknown): FormDoc {
     throw new Error('File is not a form definition.')
   }
   const obj = raw as Record<string, unknown>
+  if (obj.$formforge !== undefined && obj.$formforge !== CURRENT_SCHEMA_VERSION) {
+    throw new Error(`Unsupported FormForge schema version: ${String(obj.$formforge)}.`)
+  }
   if (!Array.isArray(obj.blocks)) {
     throw new Error('Missing "blocks" array.')
   }
@@ -86,7 +97,7 @@ export function parseDoc(raw: unknown): FormDoc {
           helpText: str(b.helpText, base.helpText),
           required: bool(b.required, base.required),
           ...(base.kind === 'longText'
-            ? { rows: numOrNull(b.rows) ?? base.rows }
+            ? { rows: clampedInteger(b.rows, base.rows, 2, 12) }
             : {}),
         })
         break
@@ -130,7 +141,7 @@ export function parseDoc(raw: unknown): FormDoc {
           label: str(b.label, base.label),
           helpText: str(b.helpText, base.helpText),
           required: bool(b.required, base.required),
-          max: Math.min(10, Math.max(3, numOrNull(b.max) ?? base.max)),
+          max: clampedInteger(b.max, base.max, 3, 10),
         })
         break
     }
